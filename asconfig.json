@@ -1,0 +1,23 @@
+{
+    "config": "flex",
+    "type": "app",
+    "compilerOptions": {
+        "source-path": [
+            "src"
+        ],
+        "library-path": [
+            "libs"
+        ],
+        "output": "bin/Test.swf",
+        "swf-version": 43,
+        "target-player": "32.0",
+        "debug": true,
+        "advanced-telemetry": false
+    },
+    "mainClass": "Test",
+    "files": [
+        "src/Test.as"
+    ],
+    "copySourcePathAssets": true,
+    "additionalOptions": ""
+}
