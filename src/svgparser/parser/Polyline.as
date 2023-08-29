@@ -22,6 +22,7 @@ package svgparser.parser
         {
             var target:Shape = new Shape();
             var style:Style = new Style( data.currentXml );
+            if ( !style.display ) return;
                
             var points:Array = data.currentXml.@points.toString().replace(/\s+$/, "")
                                                                 .replace(/\s+/g , ",")

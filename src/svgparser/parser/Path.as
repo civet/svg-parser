@@ -20,6 +20,8 @@ package svgparser.parser
         {
             var target:Shape = new Shape();
             var style:Style = new Style( data.currentXml );
+            if ( !style.display ) return;
+            
             var d:String = data.currentXml.@d.toString();
             parsePath( d );
             paint( target , style , data );
@@ -33,9 +35,30 @@ package svgparser.parser
            
         private function parsePath( data:String ):void
         {
-            var d:Array = data.match( /[MmZzLlHhVvCcSsQqTtAa]|-?[\d.]+/g );
+            // var d:Array = data.match( /[MmZzLlHhVvCcSsQqTtAa]|-?[\d.]+/g );
+
+            // --- SVG path parsing ---
+            // ref: https://codereview.stackexchange.com/questions/28502/svg-path-parsing/28565#28565
+            var commandSet:String = 'MmZzLlHhVvCcSsQqTtAa';
+            var commandPattern:RegExp = /([MmZzLlHhVvCcSsQqTtAa])/;
+            var valuePattern:RegExp = /[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?/g;
+            var d:Array = [];
+            var strings:Array = data.split( commandPattern );
+            for each (var str:String in strings) {
+                if (str == "") continue;
+                if (commandSet.indexOf(str) != -1) {
+                    d[d.length] = str;
+                } 
+                else {
+                    var values:Array = str.match( valuePattern );
+                    for each(var val:String in values) {
+                        d[d.length] = val;
+                    }
+                }
+            }
+            // ------
                
-            var len:int   = d.length;
+            var len:int = d.length;
             var pcm:String = ""; //pre command
             var px:Number = 0;  //pre x
             var py:Number = 0;  //pre y
@@ -54,8 +77,8 @@ package svgparser.parser
             var rote:Number;
             var large:Boolean;
             var sweep:Boolean;
-                
-               
+            
+
             for ( var i:int = 0; i < len; i++ )
             {
                 var c:String = d[i];
@@ -65,12 +88,17 @@ package svgparser.parser
                     i--;
                 }
                    
-                if( ( pcm == "M" || pcm == "m" )  && _commands.length > 0 && _commands[ _commands.length -1] == 1 )
+                if( ( pcm == "M" || pcm == "m" ) && _commands.length > 0 && _commands[ _commands.length -1] == 1 )
                     pcm = ( pcm == "M" ) ? "L" : "l";
                 
+                // Commands are case-sensitive. An upper-case command specifies absolute coordinates, 
+                // while a lower-case command specifies coordinates relative to the current position.
+                // ref: https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d#path_commands
+
                 switch( pcm )
                 {
                     case "M":
+                        // move to (absolute position)
                         sx = px = Number( String(d[int(i + 1)]) );
                         sy = py = Number( String(d[int(i + 2)]) );
                         _commands.push( GraphicsPathCommand.MOVE_TO );
@@ -78,6 +106,7 @@ package svgparser.parser
                         i += 2;
                         break;
                     case "m":
+                        // move to (relative position)
                         sx = px += Number( String(d[int(i + 1)]) );
                         sy = py += Number( String(d[int(i + 2)]) );
                         _commands.push( GraphicsPathCommand.MOVE_TO );
@@ -85,6 +114,7 @@ package svgparser.parser
                         i += 2;
                         break;
                     case "L":
+                        // line to (absolute position)
                         px = Number( String(d[int(i + 1)]) );
                         py = Number( String(d[int(i + 2)]) );
                         _commands.push( GraphicsPathCommand.LINE_TO );
@@ -92,6 +122,7 @@ package svgparser.parser
                         i += 2;
                         break;
                     case "l":
+                        // line to (relative position)
                         px += Number( String(d[int(i + 1)]) );
                         py += Number( String(d[int(i + 2)]) );
                         _commands.push( GraphicsPathCommand.LINE_TO );
@@ -99,30 +130,35 @@ package svgparser.parser
                         i += 2;
                         break;
                     case "H":
+                        // vertical line to (absolute position)
                         px = Number( String(d[int(i + 1)]) );
                         _commands.push( GraphicsPathCommand.LINE_TO );
                         _vertices.push( px, py );
                         i ++;
                         break;
                     case "h":
+                        // vertical line to (relative position)
                         px += Number( String(d[int(i + 1)]) );
                         _commands.push( GraphicsPathCommand.LINE_TO );
                         _vertices.push( px, py );
                         i ++;
                         break;
                     case "V":
+                        // horizontal line to (absolute position)
                         py = Number( String(d[int(i + 1)]) );
                         _commands.push( GraphicsPathCommand.LINE_TO );
                         _vertices.push( px, py );
                         i ++;
                         break;
                     case "v":
+                        // horizontal line to (relative position)
                         py += Number( String(d[int(i + 1)]) );
                         _commands.push( GraphicsPathCommand.LINE_TO );
                         _vertices.push( px, py );
                         i ++;
                         break;
-                    case "C": //cubic bezier curve
+                    case "C": 
+                        // cubic Bézier curve to (absolute position)
                         px0 = px;
                         py0 = py;
                         cx0 = Number( String(d[int(i + 1)]) );
@@ -131,10 +167,11 @@ package svgparser.parser
                         cy = Number( String(d[int(i + 4)]) );
                         px = Number( String(d[int(i + 5)]) );
                         py = Number( String(d[int(i + 6)]) );
-                        _bezier_curve(  px0, py0, cx0, cy0, cx, cy, px, py  );
+                        _bezier_curve( px0, py0, cx0, cy0, cx, cy, px, py );
                         i += 6;
                         break;
                     case "c":
+                        // cubic Bézier curve to (relative position)
                         px0 = px;
                         py0 = py;
                         cx0 = px + Number( String(d[int(i + 1)]) );
@@ -146,7 +183,8 @@ package svgparser.parser
                         _bezier_curve( px0, py0, cx0, cy0, cx, cy, px, py );
                         i += 6;
                         break;
-                    case "S": //short hand cubic bezier curve
+                    case "S":
+                        // smooth cubic Bézier curve to (absolute position)
                         px0 = _vertices.length >= 2 ? _vertices[ _vertices.length -2 ] : px;
                         py0 = _vertices.length >= 2 ? _vertices[ _vertices.length -1 ] : py;
                         cx0 = isNaN(cx) ? px : px + px - cx; // bugfix: cx is unassigned sometimes and needs to be considered
@@ -159,6 +197,7 @@ package svgparser.parser
                         i += 4;
                         break;
                     case "s":
+                        // smooth cubic Bézier curve to (relative position)
                         px0 = _vertices.length >= 2 ? _vertices[ _vertices.length -2 ] : px;
                         py0 = _vertices.length >= 2 ? _vertices[ _vertices.length -1 ] : py;
                         cx0 = isNaN(cx) ? px : px + px - cx; // bugfix: cx is unassigned sometimes and needs to be considered
@@ -170,7 +209,8 @@ package svgparser.parser
                         _bezier_curve( px0, py0 , cx0, cy0, cx, cy, px, py  );
                         i += 4;
                         break;
-                    case "Q": //quadratic bezier curve
+                    case "Q": 
+                        // quadratic Bézier curve to (absolute position)
                         cx = Number( String(d[int(i + 1)]) );
                         cy = Number( String(d[int(i + 2)]) );
                         px = Number( String(d[int(i + 3)]) );
@@ -180,6 +220,7 @@ package svgparser.parser
                         i += 4;
                         break;
                     case "q":
+                        // quadratic Bézier curve to (relative position)
                         cx = px + Number( String(d[int(i + 1)]) );
                         cy = px + Number( String(d[int(i + 2)]) );
                         px += Number( String(d[int(i + 3)]) );
@@ -188,7 +229,8 @@ package svgparser.parser
                         _vertices.push( cx, cy, px, py );
                         i += 4;
                         break;
-                    case "T": //short hand quadratic bezier curve
+                    case "T": 
+                        // smooth quadratic Bézier curve to (absolute position)
                         cx = 2*px - cx;
                         cy = 2*py - cy;
                         px = Number( String(d[int(i + 1)]) );
@@ -198,6 +240,7 @@ package svgparser.parser
                         i += 2;
                         break;
                     case "t":
+                        // smooth quadratic Bézier curve to (relative position)
                         cx = 2*px - cx;
                         cy = 2*py - cy;
                         px += Number( String(d[int(i + 1)]) );
@@ -206,7 +249,8 @@ package svgparser.parser
                         _vertices.push( cx, cy, px, py );
                         i += 2;
                         break;
-                    case "A": //arc to
+                    case "A": 
+                        // arc curve to (absolute position)
                         x0    = px;
                         y0    = py;
                         rx    = Number( String(d[int(i + 1)]) );
@@ -219,7 +263,8 @@ package svgparser.parser
                         __arc_curve( x0, y0, px, py, rx, ry, large, sweep, rote);
                         i += 7;
                         break;
-                    case "a": //arc to
+                    case "a": 
+                        // arc curve to (relative position)
                         x0    = px;
                         y0    = py;
                         rx    = Number( String(d[int(i + 1)]) );
@@ -233,10 +278,12 @@ package svgparser.parser
                         i += 7;
                         break;
                     case "Z":
+                        // ClosePath
                         _commands.push( GraphicsPathCommand.LINE_TO );
                         _vertices.push( sx, sy );
                         break;
                     case "z":
+                        // ClosePath
                         _commands.push( GraphicsPathCommand.LINE_TO );
                         _vertices.push( sx, sy );
                         break;
@@ -262,6 +309,9 @@ package svgparser.parser
            
         private function _bezier_curve( x0:Number, y0:Number, cx0:Number, cy0:Number, cx1:Number, cy1:Number, x:Number, y:Number ):void
         {
+            // data validation
+            if(isNaN(x0) || isNaN(y0) || isNaN(cx0) || isNaN(cy0) || isNaN(cx1) || isNaN(cy1) || isNaN(x) || isNaN(y)) return;
+
             var k:Number = 1.0/ Constants.BEZIER_DETAIL;
             var t:Number = 0;
             var tp:Number;
@@ -277,7 +327,10 @@ package svgparser.parser
            
         private function __arc_curve( x0:Number, y0:Number, x:Number, y:Number, rx:Number, ry:Number,
                                     large_arc_flag:Boolean, sweep_flag:Boolean, x_axis_rotation:Number ):void
-        {               
+        {          
+            // data validation
+            if(isNaN(x0) || isNaN(y0) || isNaN(x) || isNaN(y) || isNaN(rx) || isNaN(ry) || isNaN(x_axis_rotation)) return;
+
             var e:Number  = rx/ry;
             var dx:Number = (x - x0)*0.5;
             var dy:Number = (y - y0)*0.5;
@@ -334,6 +387,9 @@ package svgparser.parser
            
         private function __arc( x:Number, y:Number, rx:Number, ry:Number, begin:Number, end:Number, rotation:Number ):void
         {
+            // data validation
+            if(isNaN(x) || isNaN(y) || isNaN(rx) || isNaN(ry) || isNaN(begin) || isNaN(end) || isNaN(rotation)) return;
+
             var segmentNum:int = Math.ceil( Math.abs( 4*(end-begin)/Math.PI ) );
             var delta:Number   = (end - begin)/segmentNum;
             var ca:Number      = 1.0/Math.cos( delta*0.5 );

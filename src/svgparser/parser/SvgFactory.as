@@ -29,7 +29,7 @@ package svgparser.parser {
            
         public static function parseData( data:Data ):void
         {
-            getParser( data.currentXml  ).parse( data );
+            getParser( data.currentXml ).parse( data );
         }
            
         private static function getParser( xml:XML ):IParser

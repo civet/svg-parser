@@ -74,6 +74,7 @@ package svgparser.parser.style
 
         private var _xmls:XMLList;
         private var _hasFill:Boolean = true;
+        private var _hasFill32:Boolean = false;
         private var _hasStroke:Boolean = false;
         private var _hasGradientFill:Boolean = false;
         private var _hasGradientStroke:Boolean = false;
@@ -133,6 +134,10 @@ package svgparser.parser.style
                     else if (value.indexOf("url") == -1) {
                         this.fill = StyleUtil.toColor(value);
                         _hasFill = true;
+
+                        if(value.indexOf("rgba(") != -1) {
+                            _hasFill32 = true;
+                        }
                     }
                     else {
                         this.fill_id = StyleUtil.toURL(value);
@@ -302,6 +307,10 @@ package svgparser.parser.style
         
         public function get hasFill():Boolean {
             return _hasFill;
+        }
+
+        public function get hasFill32():Boolean {
+            return _hasFill32;
         }
         
         public function get hasGradientStroke():Boolean {

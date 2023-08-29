@@ -29,6 +29,8 @@ package svgparser.parser
             sprite = new Sprite();
             sprite.name = data.currentXml.@id.toString();
             var style:Style = new Style( data.currentXml );
+            if ( !style.display ) return;
+            
             parseSpan( data.currentXml , style );
             drawTextElements();
             style.applyStyle( sprite );

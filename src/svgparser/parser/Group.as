@@ -15,6 +15,7 @@ package svgparser.parser
         public function parse( data:Data ):void {
             var style:Style = new Style( data.currentXml );
             if ( !style.display ) return;
+            
             var group:Sprite = new Sprite();
             group.name = style.id;
             style.applyStyle( group );

@@ -30,14 +30,20 @@ package svgparser.parser.abstract
             }
 
             if (style.hasGradientStroke) {
-                gradient = data.getGradientById(style.stroke_id)
+                gradient = data.getGradientById(style.stroke_id);
                 if (gradient) {
                     target.graphics.lineGradientStyle(gradient.type,gradient.colors,gradient.alphas,gradient.ratios,gradient.matrix,gradient.method);
                 }
             }
             
             if (style.hasFill) {
-                target.graphics.beginFill(style.fill,style.fill_opacity);
+                if (style.hasFill32) {
+                    var fillAlpha:Number = (style.fill >> 24 & 0xFF) / 0xFF;
+                    var fillColor:uint = style.fill & 0xFFFFFF;
+                    target.graphics.beginFill(fillColor, style.fill_opacity * fillAlpha);
+                } else {
+                    target.graphics.beginFill(style.fill,style.fill_opacity);
+                }
             }
 
             if (style.hasGradientFill) {

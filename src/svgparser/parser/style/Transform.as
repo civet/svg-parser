@@ -20,15 +20,14 @@ package svgparser.parser.style
         
         public function parse(value:String):void
         {
+            // trim
+            value = value ? value.replace(/^\s+|\s+$/gs, '') : "";
+
             this.type = value.replace(/(.+)\(.+\)/,"$1");
 
-            if (value.indexOf(",") != -1)
+            if (value.indexOf(",") != -1 || value.indexOf(" ") != -1)
             {
-                _vals = value.replace(/.+\((.+)\)/,"$1").split(",");
-            }
-            else if (value.indexOf(" ") != -1)
-            {
-                _vals = value.replace(/.+\((.+)\)/,"$1").split(" ");
+                _vals = value.replace(/.+\((.+)\)/,"$1").split(/[\s\,]/);
             }
             else
             {
@@ -54,7 +53,15 @@ package svgparser.parser.style
                     break;
 
                 case "rotate":
-                    _matrix.rotate( GeomUtil.degree2radian(_vals[0]) );
+                    if(_vals.length >= 3)
+                    {
+                        _matrix.translate( -_vals[1],-_vals[2] );
+                        _matrix.rotate( GeomUtil.degree2radian(_vals[0]) );
+                        _matrix.translate( _vals[1],_vals[2] );
+                    }
+                    else {
+                        _matrix.rotate( GeomUtil.degree2radian(_vals[0]) );
+                    }
                     break;
 
                 case "skewX":

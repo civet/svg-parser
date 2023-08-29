@@ -22,6 +22,8 @@ package svgparser.parser
         public function parse( data:Data ):void
         {
             var style:Style = new Style( data.currentXml );
+            if ( !style.display ) return;
+            
             _href = style.href;
             _x = StyleUtil.toNumber( data.currentXml.@x );
             _y = StyleUtil.toNumber( data.currentXml.@y );

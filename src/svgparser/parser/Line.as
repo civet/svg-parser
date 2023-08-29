@@ -28,6 +28,7 @@ package svgparser.parser
         {
             var target:Shape = new Shape();
             var style:Style = new Style( data.currentXml );
+            if ( !style.display ) return;
                
             _x1 = StyleUtil.toNumber( data.currentXml.@x1 );
             _x2 = StyleUtil.toNumber( data.currentXml.@x2 );

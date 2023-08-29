@@ -23,6 +23,7 @@ package svgparser.parser
         {
             var target:Shape = new Shape();
             var style:Style = new Style( data.currentXml );
+            if ( !style.display ) return;
 
             _cx = StyleUtil.toNumber ( data.currentXml.@cx );
             _cy = StyleUtil.toNumber ( data.currentXml.@cy );
