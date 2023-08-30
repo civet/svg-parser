@@ -21,10 +21,9 @@ package svgparser.parser.style
         
         public var opacity:Number = 1;
         public var rotate:Number;
+        public var transform:svgparser.parser.style.Transform;
         public var visibility:String;
         public var display:Boolean = true;
-        public var transform:svgparser.parser.style.Transform;
-        public var offset:Number = 0;
         
         public var fill:uint = 0;
         public var fill_rule:String;
@@ -34,7 +33,7 @@ package svgparser.parser.style
         public var stroke_width:Number = 1;
         public var stroke_opacity:Number = 1;
         public var stroke_linecap:String = "none";
-        public var stroke_linejoin:String = "round";
+        public var stroke_linejoin:String = "miter";
         public var stroke_miterlimit:Number = 3;
         
         public var font_family:String = "_sans";
@@ -60,9 +59,10 @@ package svgparser.parser.style
         public var glyph_orientation_vertical:int;
 
         public var gradientTransform:svgparser.parser.style.Transform;
-        public var gradientUnits:String;
+        public var gradientUnits:String = "objectBoundingBox";
         public var stop_color:uint = 0;
         public var stop_opacity:Number = 1;
+        public var offset:Number = 0;
 
         public var marker:String;
         
@@ -131,17 +131,17 @@ package svgparser.parser.style
                     if (value == "none") {
                         _hasFill = false;
                     } 
-                    else if (value.indexOf("url") == -1) {
+                    else if (value.indexOf("url") != -1) {
+                        this.fill_id = StyleUtil.toURL(value);
+                        _hasGradientFill = true;
+                    }
+                    else {
                         this.fill = StyleUtil.toColor(value);
                         _hasFill = true;
 
                         if(value.indexOf("rgba(") != -1) {
                             _hasFill32 = true;
                         }
-                    }
-                    else {
-                        this.fill_id = StyleUtil.toURL(value);
-                        _hasGradientFill = true;
                     }
                     break;
 
@@ -211,6 +211,7 @@ package svgparser.parser.style
                     if (this.hasOwnProperty(name)) {
                         switch(typeof this[name])
                         {
+                            case "object": // warning: var str:String = null; typeof str == object
                             case "string":
                                 this[name] = value;
                                 break;

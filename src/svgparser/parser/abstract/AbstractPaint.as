@@ -7,14 +7,24 @@ package svgparser.parser.abstract
     import svgparser.parser.IGradient;
     import svgparser.parser.model.Data;
     import svgparser.parser.style.Style;
+    import flash.geom.Rectangle;
     
     public class AbstractPaint
     {
         public function AbstractPaint() { }
-        
+
         protected function draw(g:Graphics) : void
         {
             throw new Error("AbstractPaint draw method");
+        }
+        
+        protected var _draft:Shape = new Shape();
+
+        protected function getBoundingBox(withStrokes:Boolean = false):Rectangle
+        {
+            _draft.graphics.clear();
+            this.draw( _draft.graphics );
+            return withStrokes ? _draft.getBounds(null) : _draft.getRect(null);
         }
         
         protected function paint(target:Shape, style:Style, data:Data) : void
@@ -32,6 +42,8 @@ package svgparser.parser.abstract
             if (style.hasGradientStroke) {
                 gradient = data.getGradientById(style.stroke_id);
                 if (gradient) {
+                    gradient.updateMatrix( gradient.unit == "userSpaceOnUse" ? null : getBoundingBox() );
+                    
                     target.graphics.lineGradientStyle(gradient.type,gradient.colors,gradient.alphas,gradient.ratios,gradient.matrix,gradient.method);
                 }
             }
@@ -49,6 +61,8 @@ package svgparser.parser.abstract
             if (style.hasGradientFill) {
                 gradient = data.getGradientById(style.fill_id);
                 if (gradient) {
+                    gradient.updateMatrix( gradient.unit == "userSpaceOnUse" ? null : getBoundingBox() );
+                    
                     target.graphics.beginGradientFill(gradient.type,gradient.colors,gradient.alphas,gradient.ratios,gradient.matrix,gradient.method);
                 }
             }

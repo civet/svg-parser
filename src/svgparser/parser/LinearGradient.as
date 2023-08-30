@@ -4,6 +4,7 @@ package svgparser.parser
     import flash.display.SpreadMethod;
     import flash.geom.Matrix;
     import flash.geom.Point;
+    import flash.geom.Rectangle;
 
     import svgparser.parser.IGradient;
     import svgparser.parser.IParser;
@@ -23,25 +24,59 @@ package svgparser.parser
         protected var _colors:Array = [];
         protected var _alphas:Array = [];
         protected var _ratios:Array = [];
-        protected var _matrix:Matrix = new Matrix();
         protected var _method:String = SpreadMethod.PAD;
-           
-        protected var _linked:String;
+        protected var _unit:String = "objectBoundingBox";
+        protected var _matrix:Matrix = new Matrix();
         protected var _transform:Transform;
-        protected var _unit:String;
+        protected var _linked:String;
            
         private var _x1:Number;
         private var _x2:Number;
         private var _y1:Number;
         private var _y2:Number;
            
-        protected var pts:Vector.<Point>;
+        protected var pt1:Point = new Point();
+        protected var pt2:Point = new Point();
            
         public function LinearGradient() { }
            
         public function getId():String
         {
             return id;
+        }
+
+        public function updateMatrix(objectBoundingBox:Rectangle = null):void
+        {
+            if(_unit == "userSpaceOnUse") {
+                pt1.x = _x1;
+                pt1.y = _y1;
+                pt2.x = _x2;
+                pt2.y = _y2;
+            }
+            else if(objectBoundingBox) {
+                pt1.x = _x1 * objectBoundingBox.width;
+                pt1.y = _y1 * objectBoundingBox.height;
+                pt2.x = _x2 * objectBoundingBox.width;
+                pt2.y = _y2 * objectBoundingBox.height;
+            }
+            else {
+                _matrix.identity();
+                if (_transform) _matrix.concat( _transform.getMatrix() );
+                return;
+            }
+
+            var distance:Number = GeomUtil.getDistance( pt1, pt2 );
+            var boxheight:Number = Math.max( Math.abs(pt1.x - pt2.x ), Math.abs(pt1.y - pt2.y ));
+            var angle:Number = GeomUtil.getAngle(pt1, pt2);
+            var topleft:Point = new Point( pt1.x , pt1.y );
+
+            _matrix.identity();
+            _matrix.createGradientBox( distance , boxheight , 0, topleft.x, topleft.y );
+            _matrix.translate( - topleft.x , - topleft.y );
+            _matrix.rotate( angle );
+            _matrix.translate( topleft.x, topleft.y );
+            
+            if (_transform) _matrix.concat( _transform.getMatrix() );
         }
            
         public function parse( data:Data ):void
@@ -52,30 +87,20 @@ package svgparser.parser
             _transform = style.gradientTransform;
             _unit = style.gradientUnits;
             _linked = style.href;
-               
+            
+            // starting point and ending point of the vector gradient
             _x1 = getValue( data.currentXml.@x1 );
-            _x2 = getValue( data.currentXml.@x2 );
             _y1 = getValue( data.currentXml.@y1 );
+            _x2 = getValue( data.currentXml.@x2 );
             _y2 = getValue( data.currentXml.@y2 );
-               
-            pts = new Vector.<Point>();
-            pts.push( new Point( _x1, _y1 ) );
-            pts.push( new Point( _x2, _y2 ) );
-               
-            var distance:Number = GeomUtil.getDistance( pts[0], pts[1] );
-            var boxheight:Number = Math.max( Math.abs(pts[0].x - pts[1].x ), Math.abs(pts[0].y - pts[1].y ));
-            var angle:Number = GeomUtil.getAngle(pts[0], pts[1]);
-            var topleft:Point = new Point( pts[0].x , pts[0].y  );
-
-            _matrix.createGradientBox( distance , boxheight , 0, topleft.x, topleft.y );
-            _matrix.translate( - topleft.x , - topleft.y  );
-            _matrix.rotate( angle );
-            _matrix.translate( topleft.x, topleft.y  );
-               
-            if ( _transform ) _matrix.concat( _transform.getMatrix() );
                
             var svg:Namespace = Constants.svg;
             var stops:XMLList = data.currentXml.svg::stop;
+            // --- bugfix: <stop> node without namespace should also support ---
+            if(stops.length() == 0) {
+                stops = data.currentXml.stop;
+            }
+            // ------
             for each( var stop:XML in stops ) {
                 parseStop( stop );
             }
@@ -91,6 +116,7 @@ package svgparser.parser
             _colors = linkedGrad.colors.concat();
             _alphas = linkedGrad.alphas.concat();
             _ratios = linkedGrad.ratios.concat();
+            // TODO: other props?
         }
            
         protected function parseStop( stop:XML ):void
@@ -109,10 +135,10 @@ package svgparser.parser
         public function get colors():Array { return _colors; }
         public function get alphas():Array { return _alphas; }
         public function get ratios():Array { return _ratios; }
-        public function get matrix():Matrix { return _matrix; }
         public function get method():String { return _method; }
-        public function get linked():String { return _linked; }
-        public function get transform():Transform { return _transform; }
         public function get unit():String { return _unit; }
+        public function get matrix():Matrix { return _matrix; }
+        public function get transform():Transform { return _transform; }
+        public function get linked():String { return _linked; }
     }
 }

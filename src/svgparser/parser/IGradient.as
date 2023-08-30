@@ -1,6 +1,7 @@
 package svgparser.parser
 {
     import flash.geom.Matrix;
+    import flash.geom.Rectangle;
 
     import svgparser.parser.model.Data;
     import svgparser.parser.style.Transform;
@@ -9,6 +10,7 @@ package svgparser.parser
     {
         function getId():String;
         function setData( data:Data ):void;
+        function updateMatrix( objectBoundingBox:Rectangle = null ):void;
         function get type():String;
         function get colors():Array;
         function get alphas():Array;

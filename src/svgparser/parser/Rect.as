@@ -30,7 +30,7 @@ package svgparser.parser
             _width = StyleUtil.toNumber( xml.@width.toString() );
             _height = StyleUtil.toNumber( xml.@height.toString() );
 
-            paint( target , style, data );
+            paint( target, style, data );
             data.currentCanvas.addChild( target );
         }
         
