@@ -15,6 +15,7 @@ package svgparser.parser
            
         private var _commands:Vector.<int>;
         private var _vertices:Vector.<Number>;
+        private var _winding:String;
            
         public function Polygon() { }
            
@@ -35,13 +36,15 @@ package svgparser.parser
             for ( var i:int = 0 ; i < comLength   ; i++ )
                 _commands.push( GraphicsPathCommand.LINE_TO );
 
+            _winding = style.fill_rule;
+
             paint( target, style, data );
             data.currentCanvas.addChild( target );
         }
            
         override protected function draw( graphics:Graphics ):void 
         {
-            graphics.drawPath( _commands, _vertices );
+            graphics.drawPath( _commands, _vertices, _winding );
         }
     }
 }

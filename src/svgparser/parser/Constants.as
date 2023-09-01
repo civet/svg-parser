@@ -19,7 +19,7 @@ package svgparser.parser
         public static const FILL_COLOR:uint = 0x000000;
         public static const STROKE_COLOR:uint = 0x000000;
         public static const LINE_PIXEL_HINTING:Boolean = false;
-        public static const LINE_SCALE_MODE:String = LineScaleMode.NONE;
+        public static const LINE_SCALE_MODE:String = LineScaleMode.NORMAL;
         public static const BLUR_QUALITY:int = BitmapFilterQuality.HIGH;
         public static const BEZIER_DETAIL:uint = 20;
         public static const ENABLE_FILTER:Boolean = true;

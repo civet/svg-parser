@@ -30,8 +30,11 @@ package svgparser.parser.utils
 
         public static function toColor(code:String) : uint
         {
-            var numbers:Array;
-
+            if(code.match(/^([a-zA-Z]+)$/) != null)
+            {
+                code = NamedColors.toCode( code );
+            }
+            
             // rgb notation
             if(code.indexOf("rgb(") != -1)
             {

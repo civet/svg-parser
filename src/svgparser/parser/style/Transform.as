@@ -17,10 +17,20 @@ package svgparser.parser.style
 
             if (value != null) this.parse( value );
         }
-        
+
         public function parse(value:String):void
         {
-            // trim
+            // split multiple transforms
+            var matches:Array = value.match(/\w+\(.*?\)/g);
+            if (matches && matches.length > 0) {
+                for each(var x:String in matches) {
+                    parseTransform(x);
+                }
+            }
+        }
+        
+        private function parseTransform(value:String):void
+        {
             value = value ? value.replace(/^\s+|\s+$/gs, '') : "";
 
             this.type = value.replace(/(.+)\(.+\)/,"$1");

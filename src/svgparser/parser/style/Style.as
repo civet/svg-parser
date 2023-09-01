@@ -2,6 +2,8 @@ package svgparser.parser.style
 {
     import flash.display.CapsStyle;
     import flash.display.DisplayObject;
+    import flash.display.GraphicsPathWinding;
+    import flash.display.JointStyle;
     import flash.geom.Matrix;
     import flash.geom.Rectangle;
     import flash.text.engine.FontWeight;
@@ -26,15 +28,15 @@ package svgparser.parser.style
         public var display:Boolean = true;
         
         public var fill:uint = 0;
-        public var fill_rule:String;
+        public var fill_rule:String = GraphicsPathWinding.NON_ZERO;
         public var fill_opacity:Number = 1;
 
         public var stroke:uint = 0;
         public var stroke_width:Number = 1;
         public var stroke_opacity:Number = 1;
-        public var stroke_linecap:String = "none";
-        public var stroke_linejoin:String = "miter";
-        public var stroke_miterlimit:Number = 3;
+        public var stroke_linecap:String = CapsStyle.NONE; // butt
+        public var stroke_linejoin:String = JointStyle.MITER; // miter
+        public var stroke_miterlimit:Number = 4;
         
         public var font_family:String = "_sans";
         public var font_size:Number = 30;
@@ -145,12 +147,20 @@ package svgparser.parser.style
                     }
                     break;
 
+                case "fill_rule":
+                    this.fill_rule = value.toLowerCase() == "evenodd" ? GraphicsPathWinding.EVEN_ODD : GraphicsPathWinding.NON_ZERO;
+                    break;
+
                 case "stroke_width":
                     this.stroke_width = StyleUtil.toNumber(value);
                     break;
 
                 case "stroke_linecap":
                     this.stroke_linecap = value == CapsStyle.SQUARE || value == CapsStyle.ROUND ? value : CapsStyle.NONE;
+                    break;
+
+                case "stroke_linejoin":
+                    this.stroke_linejoin = value == JointStyle.BEVEL || value == JointStyle.ROUND ? value : JointStyle.MITER;
                     break;
 
                 case "font_family":

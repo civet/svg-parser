@@ -13,6 +13,7 @@ package svgparser.parser
         
         private var _commands:Vector.<int> = new Vector.<int>();
         private var _vertices:Vector.<Number> = new Vector.<Number>();
+        private var _winding:String;
            
         public function Path() {}
            
@@ -24,13 +25,11 @@ package svgparser.parser
             
             var d:String = data.currentXml.@d.toString();
             parsePath( d );
+            
+            _winding = style.fill_rule;
+
             paint( target , style , data );
             data.currentCanvas.addChild( target );
-        }
-           
-        override protected function draw( graphics:Graphics ):void
-        {
-            graphics.drawPath( _commands, _vertices );
         }
            
         private function parsePath( data:String ):void
@@ -429,6 +428,9 @@ package svgparser.parser
             }
         }
            
+        override protected function draw( graphics:Graphics ):void
+        {
+            graphics.drawPath( _commands, _vertices, _winding );
+        }  
     }
-       
 }

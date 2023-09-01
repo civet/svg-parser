@@ -9,6 +9,7 @@ package svgparser.parser
     import svgparser.parser.model.Data;
     import svgparser.parser.style.Style;
     import svgparser.parser.utils.StyleUtil;
+    import flash.display.GraphicsPathWinding;
        
     public class Line extends AbstractPaint implements IParser
     {
@@ -23,6 +24,7 @@ package svgparser.parser
            
         private var _commands:Vector.<int>;
         private var _vertices:Vector.<Number>;
+        private var _winding:String;
            
         public function parse( data:Data ):void
         {
@@ -37,14 +39,15 @@ package svgparser.parser
                
             _vertices = Vector.<Number>([ _x1, _y1 , _x2 , _y2 ]);
             _commands  = Vector.<int>([ GraphicsPathCommand.MOVE_TO, GraphicsPathCommand.LINE_TO ]);
-               
+            _winding = style.fill_rule;
+
             paint( target, style, data );
             data.currentCanvas.addChild( target );
         }
            
         override protected function draw( graphics:Graphics ):void 
         {
-            graphics.drawPath( _commands, _vertices );
+            graphics.drawPath( _commands, _vertices, _winding );
         }
     }
 }
